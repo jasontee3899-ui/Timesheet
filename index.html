@@ -151,6 +151,27 @@
   }
   .field{margin-bottom:9px;}
   .leave-dashboard-card{margin-bottom:14px;}
+  #leaveDashboard{flex-wrap:wrap;row-gap:12px;}
+  #leaveDashboard > div{min-width:88px;}
+  #summaryStatsBlock{flex-wrap:wrap;row-gap:10px;}
+  #summaryStatsBlock > div{min-width:56px;}
+  .mini-stats .stat-sep{border-left:1px solid var(--line);padding-left:10px;margin-left:2px;}
+  .leave-balance-block{border-top:1px solid var(--line);margin-top:2px;padding-top:12px;}
+  .leave-balance-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+  .leave-balance-head h4{margin:0;font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:700;}
+  .leave-balance-head .btn{font-size:11px;padding:6px 10px;}
+  .leave-balance-grid{display:flex;gap:10px;flex-wrap:wrap;}
+  .leave-balance-card{flex:1;min-width:140px;border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--paper);}
+  .leave-balance-card .lb-title{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700;margin-bottom:6px;}
+  .leave-balance-card .lb-row{display:flex;justify-content:space-between;font-size:12.5px;padding:2px 0;}
+  .leave-balance-card .lb-row b{font-family:var(--font-mono);}
+  .leave-balance-card .lb-row.remaining b{color:var(--accent-dark);font-size:14px;}
+  .leave-balance-card .lb-row.remaining.negative b{color:var(--red);}
+  .leave-balance-edit{display:flex;flex-direction:column;gap:2px;border:1px dashed var(--line);border-radius:8px;padding:12px;margin-top:2px;}
+  .leave-balance-updated{font-size:10.5px;color:var(--muted);margin-top:8px;}
+  .reclassify-block{border:1px dashed var(--amber);background:var(--amber-soft);border-radius:8px;padding:10px 12px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+  .reclassify-note{font-size:12px;color:var(--amber);flex:1;min-width:200px;}
+  .reclassify-note b{font-family:var(--font-mono);}
   .field:last-child{margin-bottom:0;}
   .field label{display:block;font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:500;}
   select,input[type=text],input[type=time],textarea{
@@ -388,6 +409,7 @@
   .history-head .h-sub{font-size:11px;color:var(--muted);font-family:var(--font-mono);}
   .history-stats{display:flex;gap:16px;font-family:var(--font-mono);font-size:11px;color:var(--muted);flex-wrap:wrap;}
   .history-stats b{color:var(--text);font-size:13px;}
+  .history-stats .stat-sep{border-left:1px solid var(--line);padding-left:16px;margin-left:-4px;}
   .history-head .print-btn{flex-shrink:0;font-size:12px;padding:7px 12px;}
   .history-body{border-top:1px solid var(--line);padding:12px 16px;display:none;}
   .history-body.open{display:block;}
@@ -598,6 +620,9 @@
             <option value="EL_FULL">Emergency Leave, EL (1 Day)</option>
             <option value="EL_AM">Emergency Leave, EL (AM)</option>
             <option value="EL_PM">Emergency Leave, EL (PM)</option>
+            <option value="MC_FULL">Medical / Sick Leave, MC</option>
+            <option value="MATERNITY_FULL">Maternity Leave</option>
+            <option value="HOSP_FULL">Hospitalisation Leave</option>
             <option value="OTHERS">Others</option>
           </select>
         </div>
@@ -706,6 +731,33 @@
         <div class="card leave-dashboard-card">
           <h3>🗓 Cumulative Leave Summary</h3>
           <div id="leaveDashboard" class="mini-stats"></div>
+
+          <div id="reclassifyBlock" class="reclassify-block" style="display:none;">
+            <div class="reclassify-note" id="reclassifyNote"></div>
+            <button class="btn btn-ghost" id="btnReclassifyLeave" style="width:auto;">🔧 Reclassify These as Maternity / Hospitalisation</button>
+          </div>
+
+          <div class="leave-balance-block">
+            <div class="leave-balance-head">
+              <h4>Leave Balance</h4>
+              <button class="btn btn-ghost" id="btnEditLeaveBalance" style="width:auto;">🔒 Manager Edit</button>
+            </div>
+            <div id="leaveBalanceView" class="leave-balance-grid"></div>
+            <div id="leaveBalanceEdit" class="leave-balance-edit" style="display:none;">
+              <div class="field">
+                <label for="alBalanceInput">Annual Leave Balance (days)</label>
+                <input type="number" id="alBalanceInput" step="0.5" min="0" placeholder="e.g. 14">
+              </div>
+              <div class="field">
+                <label for="mcBalanceInput">Medical / Sick Leave Balance (days)</label>
+                <input type="number" id="mcBalanceInput" step="0.5" min="0" placeholder="e.g. 14">
+              </div>
+              <div style="display:flex;gap:8px;">
+                <button class="btn btn-primary" id="btnSaveLeaveBalance" style="width:auto;">Save Balance</button>
+                <button class="btn btn-ghost" id="btnCancelLeaveBalance" style="width:auto;">Cancel</button>
+              </div>
+            </div>
+          </div>
         </div>
         <div id="historyList"></div>
       </div>
@@ -794,6 +846,9 @@ const LEAVE_TYPES = [
   {value:"EL_FULL", label:"Emergency Leave, EL (1 Day)", short:"EL (1 Day)", halfDay:false},
   {value:"EL_AM",   label:"Emergency Leave, EL (AM)",  short:"EL (AM)",    halfDay:true},
   {value:"EL_PM",   label:"Emergency Leave, EL (PM)",  short:"EL (PM)",    halfDay:true},
+  {value:"MC_FULL", label:"Medical / Sick Leave, MC",  short:"MC",         halfDay:false},
+  {value:"MATERNITY_FULL", label:"Maternity Leave",    short:"Maternity",  halfDay:false},
+  {value:"HOSP_FULL", label:"Hospitalisation Leave",   short:"Hospitalisation", halfDay:false},
   {value:"OTHERS",  label:"Others",                    short:"Other",      halfDay:false}
 ];
 function leaveTypeInfo(value){
@@ -819,6 +874,9 @@ function leaveCategory(leaveTypeValue){
   const info = leaveTypeInfo(leaveTypeValue);
   if(info.value.startsWith("AL")) return "AL";
   if(info.value.startsWith("EL")) return "EL";
+  if(info.value.startsWith("MC")) return "MC";
+  if(info.value.startsWith("MATERNITY")) return "MATERNITY";
+  if(info.value.startsWith("HOSP")) return "HOSP";
   return "OTHER";
 }
 
@@ -831,7 +889,10 @@ const LEAVE_BLOCK_TIMES = {
   AL_PM:   {timeIn:LUNCH_END_MIN,  timeOut:WORK_END_MIN,   description:"Annual Leave (pm)"},
   EL_FULL: {timeIn:WORK_START_MIN, timeOut:WORK_END_MIN,   description:"Emergency Leave"},
   EL_AM:   {timeIn:WORK_START_MIN, timeOut:LUNCH_START_MIN, description:"Emergency Leave (am)"},
-  EL_PM:   {timeIn:LUNCH_END_MIN,  timeOut:WORK_END_MIN,   description:"Emergency Leave (pm)"}
+  EL_PM:   {timeIn:LUNCH_END_MIN,  timeOut:WORK_END_MIN,   description:"Emergency Leave (pm)"},
+  MC_FULL: {timeIn:WORK_START_MIN, timeOut:WORK_END_MIN,   description:"Medical / Sick Leave"},
+  MATERNITY_FULL: {timeIn:WORK_START_MIN, timeOut:WORK_END_MIN, description:"Maternity Leave"},
+  HOSP_FULL: {timeIn:WORK_START_MIN, timeOut:WORK_END_MIN, description:"Hospitalisation Leave"}
 };
 function applyLeaveActivityBlock(day, type, note){
   if(!Array.isArray(day.activities)) day.activities = [];
@@ -890,7 +951,10 @@ function ensureLunchBreakForDay(day){
 }
 
 let state = loadState();
+if(!state.leaveBalances) state.leaveBalances = { al:null, mc:null, updatedAt:null };
 let activeManagerPanelOpen = false;
+let leaveBalanceEditUnlocked = false;
+let leaveBalanceEditPrefilled = false;
 
 // Always start a fresh page load pointed at today (or the latest working day),
 // even if a previous session left the daily view parked on an older date.
@@ -924,7 +988,8 @@ function loadState(){
     viewYear: now.getFullYear(),
     dailyDate: dateKey(now.getFullYear(), now.getMonth(), now.getDate()),
     sheets: {},     // key "YYYY-MM" -> {status, days:{ "YYYY-MM-DD": {...} }}
-    history: []      // archived approved sheets
+    history: [],     // archived approved sheets
+    leaveBalances: { al:null, mc:null, updatedAt:null } // manager-set, updated at month-end
   };
 }
 function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
@@ -1190,7 +1255,7 @@ function buildRows(month, year, days, {readOnly, seedLunch}={readOnly:false, see
   const daysInMonth = new Date(year, month+1, 0).getDate();
   const today = todayKey();
   let rows = "";
-  let workedDays=0, alCount=0, elCount=0, otherCount=0, totalMins=0, lateCount=0;
+  let workedDays=0, alCount=0, elCount=0, mcCount=0, maternityCount=0, hospCount=0, otherCount=0, totalMins=0, lateCount=0;
   let standardMins=0, extraMins=0, workingDaysInMonth=0;
 
   for(let d=1; d<=daysInMonth; d++){
@@ -1216,6 +1281,9 @@ function buildRows(month, year, days, {readOnly, seedLunch}={readOnly:false, see
       const leaveAmount = isHalfDayLeave(day) ? 0.5 : 1;
       if(cat==="AL") alCount += leaveAmount;
       else if(cat==="EL") elCount += leaveAmount;
+      else if(cat==="MC") mcCount += leaveAmount;
+      else if(cat==="MATERNITY") maternityCount += leaveAmount;
+      else if(cat==="HOSP") hospCount += leaveAmount;
       else otherCount += leaveAmount;
     }
     const allActivityMins = (day && Array.isArray(day.activities))
@@ -1303,7 +1371,7 @@ function buildRows(month, year, days, {readOnly, seedLunch}={readOnly:false, see
   // minutes within the 8am-5pm window — simpler and predictable regardless
   // of split shifts or odd clock-in/out edge cases.
   standardMins = workedDays * MIN_DAILY_MINUTES;
-  return { rows, stats:{workedDays, alCount, elCount, otherCount, totalMins, lateCount, standardMins, extraMins, workingDaysInMonth} };
+  return { rows, stats:{workedDays, alCount, elCount, mcCount, maternityCount, hospCount, otherCount, totalMins, lateCount, standardMins, extraMins, workingDaysInMonth} };
 }
 
 function escapeHtml(str){
@@ -1449,7 +1517,10 @@ function renderMonthlySummary(){
     <div><span class="v">${stats.workedDays}</span><span class="l">Worked</span></div>
     <div><span class="v">${stats.alCount}</span><span class="l">AL</span></div>
     <div><span class="v">${stats.elCount}</span><span class="l">EL</span></div>
-    <div><span class="v">${stats.otherCount}</span><span class="l">Other</span></div>
+    <div><span class="v">${stats.mcCount}</span><span class="l">MC</span></div>
+    <div><span class="v">${stats.maternityCount||0}</span><span class="l">Maternity</span></div>
+    <div><span class="v">${stats.hospCount||0}</span><span class="l">Hosp.</span></div>
+    <div class="stat-sep"><span class="v">${stats.otherCount}</span><span class="l">Other</span></div>
     <div><span class="v">${stats.lateCount}</span><span class="l">Flags</span></div>
     <div><span class="v">${durationLabel(stats.totalMins)}</span><span class="l">Total</span></div>`;
 
@@ -1493,20 +1564,106 @@ function fmtLeaveCount(n){
   return Number.isInteger(n) ? String(n) : n.toFixed(1);
 }
 
+function renderLeaveBalance(){
+  const alTaken = state.history.reduce((sum,r)=>sum+(r.stats.alCount||0),0);
+  const mcTaken = state.history.reduce((sum,r)=>sum+(r.stats.mcCount||0),0);
+  const bal = state.leaveBalances || {al:null, mc:null, updatedAt:null};
+
+  const cardHtml = (label, taken, balanceVal) => {
+    const hasBalance = balanceVal!=null && balanceVal!=="";
+    const remaining = hasBalance ? balanceVal - taken : null;
+    const remainingCls = (remaining!=null && remaining<0) ? "remaining negative" : "remaining";
+    return `<div class="leave-balance-card">
+      <div class="lb-title">${label}</div>
+      <div class="lb-row"><span>Balance</span><b>${hasBalance ? fmtLeaveCount(balanceVal) : "Not set"}</b></div>
+      <div class="lb-row"><span>Taken</span><b>${fmtLeaveCount(taken)}</b></div>
+      <div class="lb-row ${remainingCls}"><span>Remaining</span><b>${hasBalance ? fmtLeaveCount(remaining) : "—"}</b></div>
+    </div>`;
+  };
+
+  const viewEl = document.getElementById("leaveBalanceView");
+  const editEl = document.getElementById("leaveBalanceEdit");
+  const toggleBtn = document.getElementById("btnEditLeaveBalance");
+  if(!viewEl || !editEl || !toggleBtn) return;
+
+  viewEl.innerHTML = cardHtml("Annual Leave", alTaken, bal.al) + cardHtml("Medical / Sick Leave", mcTaken, bal.mc)
+    + (bal.updatedAt ? `<div class="leave-balance-updated" style="width:100%;">Last updated by manager: ${new Date(bal.updatedAt).toLocaleString()}</div>` : "");
+
+  viewEl.style.display = leaveBalanceEditUnlocked ? "none" : "flex";
+  editEl.style.display = leaveBalanceEditUnlocked ? "flex" : "none";
+  toggleBtn.style.display = leaveBalanceEditUnlocked ? "none" : "inline-block";
+
+  if(leaveBalanceEditUnlocked){
+    // Only pre-fill once on entering edit mode — a later periodic re-render
+    // (e.g. the clock tick) must not clobber values the manager is mid-typing.
+    if(!leaveBalanceEditPrefilled){
+      document.getElementById("alBalanceInput").value = bal.al!=null ? bal.al : "";
+      document.getElementById("mcBalanceInput").value = bal.mc!=null ? bal.mc : "";
+      leaveBalanceEditPrefilled = true;
+    }
+  } else {
+    leaveBalanceEditPrefilled = false;
+  }
+}
+
+// Days logged as the generic "Others" leave type before Maternity/MC/
+// Hospitalisation existed as options — detected by keyword match on the
+// hand-typed note — that a manager can choose to re-tag under the correct
+// category so historical stats line up with the current breakdown.
+function findReclassifiableLeaveEntries(){
+  const matches = [];
+  state.history.forEach((rec, recIdx)=>{
+    Object.keys(rec.days||{}).forEach(dayKey=>{
+      const day = rec.days[dayKey];
+      if(!day || day.leaveType!=="OTHERS" || !day.leaveNote) return;
+      const note = day.leaveNote.toLowerCase();
+      let suggestedType = null;
+      if(/matern/.test(note)) suggestedType = "MATERNITY_FULL";
+      else if(/hospit/.test(note)) suggestedType = "HOSP_FULL";
+      if(suggestedType) matches.push({ recIdx, dayKey, note: day.leaveNote, suggestedType });
+    });
+  });
+  return matches;
+}
+
 function renderHistory(){
+  const reclassifyBlock = document.getElementById("reclassifyBlock");
+  if(reclassifyBlock){
+    const matches = findReclassifiableLeaveEntries();
+    if(matches.length>0){
+      const maternityN = matches.filter(m=>m.suggestedType==="MATERNITY_FULL").length;
+      const hospN = matches.filter(m=>m.suggestedType==="HOSP_FULL").length;
+      const parts = [];
+      if(maternityN) parts.push(`${maternityN} Maternity`);
+      if(hospN) parts.push(`${hospN} Hospitalisation`);
+      document.getElementById("reclassifyNote").innerHTML =
+        `Found <b>${matches.length}</b> "Other" ${matches.length===1?"entry":"entries"} in approved history whose note looks like ${parts.join(" / ")} leave.`;
+      reclassifyBlock.style.display = "flex";
+    } else {
+      reclassifyBlock.style.display = "none";
+    }
+  }
+
   const dash = document.getElementById("leaveDashboard");
   if(dash){
     const alTotal = state.history.reduce((sum,r)=>sum+(r.stats.alCount||0),0);
     const elTotal = state.history.reduce((sum,r)=>sum+(r.stats.elCount||0),0);
+    const mcTotal = state.history.reduce((sum,r)=>sum+(r.stats.mcCount||0),0);
+    const maternityTotal = state.history.reduce((sum,r)=>sum+(r.stats.maternityCount||0),0);
+    const hospTotal = state.history.reduce((sum,r)=>sum+(r.stats.hospCount||0),0);
     const otherTotal = state.history.reduce((sum,r)=>sum+(r.stats.otherCount||0),0);
-    const grandTotal = alTotal + elTotal + otherTotal;
+    const grandTotal = alTotal + elTotal + mcTotal + maternityTotal + hospTotal + otherTotal;
     dash.innerHTML = `
       <div><span class="v">${fmtLeaveCount(alTotal)}</span><span class="l">AL Taken</span></div>
       <div><span class="v">${fmtLeaveCount(elTotal)}</span><span class="l">EL Taken</span></div>
-      <div><span class="v">${fmtLeaveCount(otherTotal)}</span><span class="l">Other</span></div>
+      <div><span class="v">${fmtLeaveCount(mcTotal)}</span><span class="l">MC Taken</span></div>
+      <div><span class="v">${fmtLeaveCount(maternityTotal)}</span><span class="l">Maternity</span></div>
+      <div><span class="v">${fmtLeaveCount(hospTotal)}</span><span class="l">Hospitalisation</span></div>
+      <div class="stat-sep"><span class="v">${fmtLeaveCount(otherTotal)}</span><span class="l">Other</span></div>
       <div><span class="v">${fmtLeaveCount(grandTotal)}</span><span class="l">Total Leave</span></div>
       <div><span class="v">${state.history.length}</span><span class="l">Approved Months</span></div>`;
   }
+  renderLeaveBalance();
 
   const list = document.getElementById("historyList");
   if(state.history.length===0){
@@ -1527,7 +1684,10 @@ function renderHistory(){
           <span>Worked <b>${rec.stats.workedDays}</b></span>
           <span>AL <b>${rec.stats.alCount}</b></span>
           <span>EL <b>${rec.stats.elCount}</b></span>
-          <span>Other <b>${rec.stats.otherCount||0}</b></span>
+          <span>MC <b>${rec.stats.mcCount||0}</b></span>
+          <span>Maternity <b>${rec.stats.maternityCount||0}</b></span>
+          <span>Hosp. <b>${rec.stats.hospCount||0}</b></span>
+          <span class="stat-sep">Other <b>${rec.stats.otherCount||0}</b></span>
           <span>Standard Hrs <b>${durationLabel(rec.stats.standardMins||0)}</b></span>
           <span>Extra Hrs <b>${durationLabel(rec.stats.extraMins||0)}</b></span>
           <span>Total <b>${durationLabel(rec.stats.totalMins)}</b></span>
@@ -1583,7 +1743,7 @@ function printHistoryRecord(idx){
       <span><b>Employee:</b> ${escapeHtml(rec.employee)}</span>
       <span><b>Period:</b> ${MONTH_NAMES[rec.month]} ${rec.year}</span>
       <span><b>Approved:</b> ${new Date(rec.approvedAt).toLocaleString()}</span>
-      <span><b>Working Days:</b> ${stats.workingDaysInMonth} &nbsp; <b>Worked:</b> ${stats.workedDays} &nbsp; <b>AL:</b> ${stats.alCount} &nbsp; <b>EL:</b> ${stats.elCount} &nbsp; <b>Other:</b> ${stats.otherCount}</span>
+      <span><b>Working Days:</b> ${stats.workingDaysInMonth} &nbsp; <b>Worked:</b> ${stats.workedDays} &nbsp; <b>AL:</b> ${stats.alCount} &nbsp; <b>EL:</b> ${stats.elCount} &nbsp; <b>MC:</b> ${stats.mcCount||0} &nbsp; <b>Maternity:</b> ${stats.maternityCount||0} &nbsp; <b>Hosp.:</b> ${stats.hospCount||0} &nbsp; | &nbsp; <b>Other:</b> ${stats.otherCount}</span>
       <span><b>Standard Hrs:</b> ${durationLabel(stats.standardMins)} &nbsp; <b>Extra Hrs:</b> ${durationLabel(stats.extraMins)} &nbsp; <b>Total:</b> ${durationLabel(stats.totalMins)}</span>
     </div>
     <table class="ts-table">
@@ -1820,6 +1980,68 @@ document.getElementById("btnMgrToggle").addEventListener("click", ()=>{
   activeManagerPanelOpen = !activeManagerPanelOpen;
   document.getElementById("btnMgrToggle").textContent = (activeManagerPanelOpen?"▴":"▾")+" Manager Console";
   document.getElementById("mgrPanel").style.display = activeManagerPanelOpen ? "block":"none";
+});
+
+document.getElementById("btnEditLeaveBalance").addEventListener("click", ()=>{
+  openPasscodeModal(
+    "Edit Leave Balance",
+    "Enter the manager passcode to update the Annual Leave and Medical/Sick Leave balances.",
+    ()=>{
+      leaveBalanceEditUnlocked = true;
+      renderLeaveBalance();
+    }
+  );
+});
+document.getElementById("btnCancelLeaveBalance").addEventListener("click", ()=>{
+  leaveBalanceEditUnlocked = false;
+  renderLeaveBalance();
+});
+document.getElementById("btnSaveLeaveBalance").addEventListener("click", ()=>{
+  const alRaw = document.getElementById("alBalanceInput").value.trim();
+  const mcRaw = document.getElementById("mcBalanceInput").value.trim();
+  const alNum = alRaw==="" ? null : Number(alRaw);
+  const mcNum = mcRaw==="" ? null : Number(mcRaw);
+  if((alRaw!=="" && (isNaN(alNum) || alNum<0)) || (mcRaw!=="" && (isNaN(mcNum) || mcNum<0))){
+    showToast("Please enter valid, non-negative numbers for the leave balances.");
+    return;
+  }
+  state.leaveBalances = { al: alNum, mc: mcNum, updatedAt: new Date().toISOString() };
+  leaveBalanceEditUnlocked = false;
+  saveState();
+  renderLeaveBalance();
+  showToast("Leave balances updated.");
+});
+
+document.getElementById("btnReclassifyLeave").addEventListener("click", ()=>{
+  const matches = findReclassifiableLeaveEntries();
+  if(matches.length===0) return;
+  const maternityN = matches.filter(m=>m.suggestedType==="MATERNITY_FULL").length;
+  const hospN = matches.filter(m=>m.suggestedType==="HOSP_FULL").length;
+  const parts = [];
+  if(maternityN) parts.push(`${maternityN} to Maternity`);
+  if(hospN) parts.push(`${hospN} to Hospitalisation`);
+  if(!confirm(`Reclassify ${matches.length} approved "Other" ${matches.length===1?"entry":"entries"} (${parts.join(", ")})? This updates archived history records and can't be undone.`)) return;
+
+  openPasscodeModal(
+    "Reclassify Leave Entries",
+    "Enter the manager passcode to reclassify these approved history entries.",
+    ()=>{
+      const touchedRecIdx = new Set();
+      matches.forEach(m=>{
+        const rec = state.history[m.recIdx];
+        if(!rec || !rec.days[m.dayKey]) return;
+        rec.days[m.dayKey].leaveType = m.suggestedType;
+        touchedRecIdx.add(m.recIdx);
+      });
+      touchedRecIdx.forEach(idx=>{
+        const rec = state.history[idx];
+        const { stats } = buildRows(rec.month, rec.year, rec.days, {readOnly:true});
+        rec.stats = stats;
+      });
+      renderAll();
+      showToast(`Reclassified ${matches.length} ${matches.length===1?"entry":"entries"}.`);
+    }
+  );
 });
 
 function switchTab(tab){

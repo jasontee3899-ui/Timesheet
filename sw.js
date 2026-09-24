@@ -2,7 +2,7 @@
 // Cache-first app shell so the tracker keeps working offline once it's been
 // opened at least once. Bump CACHE_VERSION whenever index.html changes so
 // visitors pick up the new version instead of a stale cached copy.
-const CACHE_VERSION = "attendance-ledger-v1";
+const CACHE_VERSION = "attendance-ledger-v2";
 const APP_SHELL = [
   "./",
   "./index.html",

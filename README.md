@@ -26,7 +26,9 @@ README.md             this file
    `https://<your-username>.github.io/<repo-name>/`
    (First deploy can take a minute or two.)
 
-That's it — no build step, no dependencies to install.
+If you're updating an existing repo with this package, just overwrite the
+old files with these and push — see "Updating the app later" below for why
+the cache still refreshes correctly.
 
 ## Installing the app
 
@@ -53,9 +55,16 @@ subpath — no path edits needed either way.
 ## Updating the app later
 
 If you edit `index.html` (or any cached file), bump `CACHE_VERSION` in
-`sw.js` (e.g. `attendance-ledger-v1` → `attendance-ledger-v2`). This
+`sw.js` (e.g. `attendance-ledger-v2` → `attendance-ledger-v3`). This
 forces the service worker to drop the old cache and fetch the new files,
 so visitors don't get stuck on a stale cached copy.
+
+**This package is already at `attendance-ledger-v2`** — it was bumped
+from `v1` to reflect everything added since the first PWA build: the
+expanded Leave Type list (Medical/Sick, Maternity, Hospitalisation), the
+Cumulative Leave Summary dashboard, the manager-only Leave Balance panel,
+and the legacy-entry reclassification tool. Anyone who installed the
+`v1` build will pick up all of this automatically on their next visit.
 
 ## Data & privacy
 
